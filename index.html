@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Board — Ryan's Task Quest</title>
+<style>
+  :root{
+    --bg-0:#12101c;
+    --bg-1:#1b1830;
+    --bg-2:#241f3f;
+    --card:#28234a;
+    --card-border:#3d3568;
+    --gold:#f5c451;
+    --gold-2:#ffdf8a;
+    --teal:#31d6c1;
+    --pink:#ff6ea8;
+    --violet:#9d7bff;
+    --text:#f1eefb;
+    --text-dim:#b6b0d6;
+    --danger:#ff6b6b;
+    --ok:#57e39a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(157,123,255,0.25), transparent 40%),
+      radial-gradient(circle at 85% 0%, rgba(49,214,193,0.18), transparent 45%),
+      radial-gradient(circle at 50% 100%, rgba(255,110,168,0.15), transparent 50%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
+    font-family: "Segoe UI", Aptos, system-ui, -apple-system, sans-serif;
+    color:var(--text);
+    padding: 24px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  header h1{
+    font-size:2rem;
+    margin:0 0 4px;
+    background:linear-gradient(90deg,var(--gold-2),var(--pink),var(--violet));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    letter-spacing:0.5px;
+  }
+  header p{margin:0;color:var(--text-dim);font-size:0.95rem;}
+
+  /* ---- Stat bar ---- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin:22px 0;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:12px 8px;
+    text-align:center;
+  }
+  .stat .val{font-size:1.4rem;font-weight:700;}
+  .stat .lbl{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+  .stat.level .val{color:var(--gold);}
+  .stat.streak .val{color:var(--pink);}
+  .stat.xp .val{color:var(--teal);}
+  .stat.left .val{color:var(--violet);}
+
+  .xpbar-wrap{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:999px;
+    height:14px;
+    overflow:hidden;
+    margin:-8px 0 22px;
+    position:relative;
+  }
+  .xpbar-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--teal),var(--violet));
+    width:0%;
+    transition:width 0.6s ease;
+  }
+  .xpbar-label{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.62rem;color:#0b0a16;font-weight:700;mix-blend-mode:screen;
+    color:var(--text);
+  }
+
+  /* ---- View toggle ---- */
+  .toggle{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .toggle button{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    color:var(--text-dim);
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:0.85rem;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .toggle button.active{
+    background:linear-gradient(90deg,var(--violet),var(--pink));
+    color:white;
+    border-color:transparent;
+  }
+
+  /* ---- Focus card mode ---- */
+  #focusView{display:block;}
+  .card-stack{
+    position:relative;
+    min-height:340px;
+  }
+  .quest-card{
+    background:linear-gradient(160deg, var(--card), var(--bg-2));
+    border:1px solid var(--card-border);
+    border-radius:22px;
+    padding:26px 24px 22px;
+    box-shadow:0 20px 40px -18px rgba(0,0,0,0.6);
+    animation:pop-in 0.35s ease;
+  }
+  @keyframes pop-in{
+    from{opacity:0;transform:translateY(14px) scale(0.97);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+  .badge-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .cat-badge{
+    font-size:0.72rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    padding:5px 12px;
+    border-radius:999px;
+  }
+  .cat-badge.deadline{background:rgba(255,107,107,0.18);color:var(--danger);}
+  .cat-badge.action{background:rgba(49,214,193,0.18);color:var(--teal);}
+  .cat-badge.fyi{background:rgba(157,123,255,0.18);color:var(--violet);}
+  .xp-chip{font-size:0.75rem;color:var(--gold);font-weight:700;}
+
+  .quest-card h2{font-size:1.25rem;margin:0 0 10px;line-height:1.3;}
+  .meta-line{font-size:0.82rem;color:var(--text-dim);margin-bottom:2px;}
+  .meta-line b{color:var(--text);}
+  .detail{
+    margin-top:14px;
+    font-size:0.88rem;
+    color:var(--text-dim);
+    background:rgba(0,0,0,0.18);
+    border-left:3px solid var(--violet);
+    padding:10px 14px;
+    border-radius:8px;
+    line-height:1.5;
+  }
+  .due-pill{
+    display:inline-block;
+    margin-top:10px;
+    font-size:0.75rem;
+    padding:3px 10px;
+    border-radius:999px;
+    background:rgba(245,196,81,0.15);
+    color:var(--gold);
+  }
+
+  .action-row{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .action-row button{
+    flex:1;
+    padding:14px 10px;
+    border-radius:14px;
+    border:none;
+    font-size:0.95rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform 0.1s ease, filter 0.15s ease;
+  }
+  .action-row button:active{transform:scale(0.96);}
+  .btn-complete{background:linear-gradient(90deg,#57e39a,#31d6c1);color:#0b241d;}
+  .btn-complete:hover{filter:brightness(1.08);}
+  .btn-snooze{background:var(--bg-2);color:var(--text-dim);border:1px solid var(--card-border) !important;}
+  .btn-snooze:hover{color:var(--text);}
+
+  .queue-hint{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.8rem;
+    margin-top:14px;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    background:var(--card);
+    border:1px dashed var(--card-border);
+    border-radius:22px;
+  }
+  .empty-state .emoji{font-size:3rem;margin-bottom:10px;}
+  .empty-state h3{margin:0 0 6px;color:var(--gold);}
+  .empty-state p{color:var(--text-dim);margin:0;}
+
+  /* ---- List mode ---- */
+  #listView{display:none;}
+  .section-title{
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--text-dim);
+    margin:22px 0 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title .dot{width:8px;height:8px;border-radius:50%;}
+  .dot.deadline{background:var(--danger);}
+  .dot.action{background:var(--teal);}
+  .dot.fyi{background:var(--violet);}
+
+  .list-item{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    cursor:pointer;
+    transition:opacity 0.2s;
+  }
+  .list-item.done{opacity:0.4;}
+  .list-item .check{
+    width:22px;height:22px;
+    border-radius:6px;
+    border:2px solid var(--card-border);
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.8rem;
+    margin-top:2px;
+  }
+  .list-item.done .check{background:var(--ok);border-color:var(--ok);color:#0b241d;}
+  .list-item .title{font-weight:600;font-size:0.92rem;}
+  .list-item .sub{font-size:0.78rem;color:var(--text-dim);margin-top:2px;}
+  .list-item.done .title{text-decoration:line-through;}
+
+  /* ---- Confetti ---- */
+  #confetti-layer{
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:999;
+    overflow:hidden;
+  }
+  .confetti-piece{
+    position:absolute;
+    top:-10px;
+    width:8px;height:14px;
+    opacity:0.9;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform: translateY(110vh) rotate(540deg); opacity:0.3; }
+  }
+
+  #levelup{
+    position:fixed;
+    top:20%;left:50%;
+    transform:translate(-50%,-40px);
+    background:linear-gradient(90deg,var(--gold),var(--pink));
+    color:#241933;
+    font-weight:800;
+    padding:14px 26px;
+    border-radius:16px;
+    box-shadow:0 20px 50px -10px rgba(0,0,0,0.6);
+    opacity:0;
+    z-index:1000;
+    transition:all 0.4s cubic-bezier(.2,1.4,.4,1);
+    text-align:center;
+    font-size:1.05rem;
+  }
+  #levelup.show{opacity:1;transform:translate(-50%,0);}
+
+  footer{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.75rem;
+    margin-top:40px;
+    opacity:0.6;
+  }
+
+  @media (max-width:480px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div id="confetti-layer"></div>
+<div id="levelup"></div>
+
+<div class="wrap">
+  <header>
+    <h1>⚔️ Ryan's Quest Board</h1>
+    <p>One quest at a time. Clear it, level up, keep the streak alive.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat level"><div class="val" id="statLevel">1</div><div class="lbl">Level</div></div>
+    <div class="stat xp"><div class="val" id="statXP">0</div><div class="lbl">Total XP</div></div>
+    <div class="stat streak"><div class="val" id="statStreak">0🔥</div><div class="lbl">Day Streak</div></div>
+    <div class="stat left"><div class="val" id="statLeft">0</div><div class="lbl">Quests Left</div></div>
+  </div>
+
+  <div class="xpbar-wrap">
+    <div class="xpbar-fill" id="xpFill"></div>
+    <div class="xpbar-label" id="xpLabel"></div>
+  </div>
+
+  <div class="toggle">
+    <button id="btnFocus" class="active">🎯 Focus Mode</button>
+    <button id="btnList">📋 Full Quest Log</button>
+  </div>
+
+  <div id="focusView">
+    <div class="card-stack" id="cardStack"></div>
+    <div class="queue-hint" id="queueHint"></div>
+  </div>
+
+  <div id="listView"></div>
+
+  <footer>Quest data reflects the task tracker as of Aug 4, 2026 — ask Claude to resync when new tasks come in.</footer>
+</div>
+
+<script>
+/* ---------------- Quest data ---------------- */
+/* category: deadline (20xp) | action (10xp) | fyi (5xp) */
+const QUESTS = [
+  {
+    id:"q-becker-2027",
+    category:"deadline",
+    title:"Pick Becker's 2027 Annual Meeting digital deliverables",
+    from:"Liz Engman — Becker's Healthcare",
+    due:"~Aug 11, 2026",
+    detail:"Liz sent the 2027 sponsorship deadlines/deliverables doc and flagged the digital + print ads in Column E, Tab 2 to make them easy to spot. Review those digital deliverables and decide next steps."
+  },
+  {
+    id:"q-evergreen-sizes",
+    category:"action",
+    title:"Audit Evergreen ad sizes vs. New Site sizes, loop in Design",
+    from:"Dan Sexton — Quattro",
+    due:"—",
+    detail:"Dan confirmed New Site display sizes needed (same across StackAdapt & Google Display): 970x90, 320x50, 300x600, 728x90, 300x250, 160x600. Check what Evergreen already has, flag the gaps, then get Design to build the missing sizes so New Site creative matches Evergreen."
+  },
+  {
+    id:"q-tom-ende-note",
+    category:"action",
+    title:"Find + reply to the email Tom Ende is referencing",
+    from:"Tom Ende — EMRA",
+    due:"—",
+    detail:"Tom asked if you got his note from a couple weeks ago about digital ads. That's his 7/23 email — EMRA's Exec Director asked if the ad art could show a Vituity logo instead of just text. Looks unanswered — reply with a decision."
+  },
+  {
+    id:"q-jrohr-invoice",
+    category:"action",
+    title:"Reach out to LL about Jennifer Rohr's SD Physician invoice",
+    from:"Jennifer Rohr — SDCMS",
+    due:"—",
+    detail:"Invoice for July SDCMS advertising is in. Per the June thread with Julia Ogburn, the deal was 2 months of web banners (from July) + 1 month News You Can Use eNewsletter (from August), $1,000/month — IO/W9/ACH already on file. Confirm the invoice matches, then send to LL."
+  },
+  {
+    id:"q-vendor-articles",
+    category:"action",
+    title:"Review Sarah's Psych Times + Doximity articles, set up vendor ads",
+    from:"Sarah Maurer",
+    due:"—",
+    detail:"Both sponsored articles are finalized: Psychiatric Times (Scott Zeller, MD — 'Beyond the Status Quo in Psychiatric Emergency Care') and Doximity (Josh Tamayo-Sarver). Set up the vendor ads now that content is locked."
+  },
+  {
+    id:"q-vendor-sheets",
+    category:"action",
+    title:"Build vendor ad sheets and send them out",
+    from:"Ryan (self)",
+    due:"—",
+    detail:"Put together the ad sheets for vendors and get them sent."
+  },
+  {
+    id:"q-ryan-magee",
+    category:"action",
+    title:"Ask Ryan Magee (Wolters Kluwer) about Brilliance ad options",
+    from:"Ryan Birdsall (follow-up)",
+    due:"—",
+    detail:"Follow up on what digital advertising options WK has that could work for Brilliance."
+  },
+  {
+    id:"q-smartbrief",
+    category:"action",
+    title:"Review SmartBrief AI newsletter pilot pricing, loop in Julia",
+    from:"Claire Dwyre — SmartBrief",
+    due:"—",
+    detail:"Two options pitched: AI Impact newsletter (BOGO eBlasts $7,500/date or Takeovers $1,100/date) or the Healthcare AI Impact webinar series. Pilot pricing valid before end of September."
+  },
+  {
+    id:"q-compliance",
+    category:"deadline",
+    title:"Finish 2026-27 mandatory compliance training",
+    from:"Vituity University",
+    due:"Was due Jul 31 — overdue",
+    detail:"HIPAA Privacy/Security/Compliance + Business Partner Policy Acknowledgments. Log in to Vituity University → My Learning Assignments."
+  },
+  {
+    id:"q-doximity-results",
+    category:"fyi",
+    title:"Pull Doximity results for Bobbie's article",
+    from:"Julia Ogburn",
+    due:"After campaign end (~Jul 15)",
+    detail:"Julia noted results should get pulled and shared once the campaign wraps."
+  }
+];
+
+const XP_MAP = { deadline:20, action:10, fyi:5 };
+const CAT_LABEL = { deadline:"Deadline", action:"Action Needed", fyi:"FYI / Soft Ask" };
+
+/* ---------------- State ---------------- */
+const STORE_KEY = "questBoardState_v1";
+
+function loadState(){
+  let raw = localStorage.getItem(STORE_KEY);
+  let today = new Date().toISOString().slice(0,10);
+  if(!raw){
+    return { xp:0, done:{}, snoozeOrder:[], streak:0, lastVisit:null, lastVisitDay:today };
+  }
+  let s = JSON.parse(raw);
+  // streak logic: compare lastVisitDay to today
+  if(s.lastVisitDay !== today){
+    const last = s.lastVisitDay ? new Date(s.lastVisitDay) : null;
+    const now = new Date(today);
+    const diffDays = last ? Math.round((now - last)/86400000) : null;
+    if(diffDays === 1){
+      s.streak = (s.streak||0) + 1;
+    } else if(diffDays !== 0){
+      s.streak = 1; // streak broken, restart today
+    }
+    s.lastVisitDay = today;
+  } else if(!s.streak){
+    s.streak = 1;
+  }
+  return s;
+}
+
+let state = loadState();
+save();
+
+function save(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+/* ---------------- Queue ---------------- */
+function getQueue(){
+  // order: snoozed items pushed to back, otherwise original order; done items excluded
+  let pending = QUESTS.filter(q => !state.done[q.id]);
+  if(state.snoozeOrder && state.snoozeOrder.length){
+    pending.sort((a,b) => {
+      let ai = state.snoozeOrder.indexOf(a.id);
+      let bi = state.snoozeOrder.indexOf(b.id);
+      if(ai === -1) ai = -1;
+      if(bi === -1) bi = -1;
+      return ai - bi;
+    });
+  }
+  return pending;
+}
+
+/* ---------------- Rendering: stats ---------------- */
+function levelFromXP(xp){
+  return Math.floor(xp/50) + 1;
+}
+function xpIntoLevel(xp){
+  return xp % 50;
+}
+
+function renderStats(){
+  const level = levelFromXP(state.xp);
+  document.getElementById("statLevel").textContent = level;
+  document.getElementById("statXP").textContent = state.xp;
+  document.getElementById("statStreak").textContent = (state.streak||0) + "🔥";
+  document.getElementById("statLeft").textContent = getQueue().length;
+
+  const into = xpIntoLevel(state.xp);
+  document.getElementById("xpFill").style.width = (into/50*100) + "%";
+  document.getElementById("xpLabel").textContent = into + " / 50 XP to Level " + (level+1);
+}
+
+/* ---------------- Focus card ---------------- */
+function renderFocus(){
+  const stack = document.getElementById("cardStack");
+  const hint = document.getElementById("queueHint");
+  const queue = getQueue();
+  stack.innerHTML = "";
+
+  if(queue.length === 0){
+    stack.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">🏆</div>
+        <h3>Quest log cleared!</h3>
+        <p>Every quest is done. Enjoy the quiet — new quests will show up here once Claude resyncs the tracker.</p>
+      </div>`;
+    hint.textContent = "";
+    return;
+  }
+
+  const q = queue[0];
+  const xp = XP_MAP[q.category];
+
+  const card = document.createElement("div");
+  card.className = "quest-card";
+  card.innerHTML = `
+    <div class="badge-row">
+      <span class="cat-badge ${q.category}">${CAT_LABEL[q.category]}</span>
+      <span class="xp-chip">+${xp} XP</span>
+    </div>
+    <h2>${q.title}</h2>
+    <div class="meta-line"><b>From:</b> ${q.from}</div>
+    ${q.due !== "—" ? `<div class="due-pill">⏰ ${q.due}</div>` : ""}
+    <div class="detail">${q.detail}</div>
+    <div class="action-row">
+      <button class="btn-complete" data-id="${q.id}">✅ Complete Quest</button>
+      <button class="btn-snooze" data-id="${q.id}">😴 Snooze</button>
+    </div>
+  `;
+  stack.appendChild(card);
+
+  card.querySelector(".btn-complete").addEventListener("click", () => completeQuest(q.id));
+  card.querySelector(".btn-snooze").addEventListener("click", () => snoozeQuest(q.id));
+
+  hint.textContent = queue.length > 1 ? `${queue.length - 1} more quest${queue.length-1===1?"":"s"} waiting after this one` : "Last one — go get it!";
+}
+
+function completeQuest(id){
+  const q = QUESTS.find(x => x.id === id);
+  if(!q) return;
+  const prevLevel = levelFromXP(state.xp);
+  state.done[id] = true;
+  state.xp += XP_MAP[q.category];
+  save();
+  fireConfetti();
+  const newLevel = levelFromXP(state.xp);
+  if(newLevel > prevLevel){
+    showLevelUp(newLevel);
+  }
+  renderAll();
+}
+
+function snoozeQuest(id){
+  const queue = getQueue().map(q => q.id).filter(x => x !== id);
+  queue.push(id);
+  state.snoozeOrder = queue;
+  save();
+  renderAll();
+}
+
+/* ---------------- List view ---------------- */
+function renderList(){
+  const el = document.getElementById("listView");
+  const cats = ["deadline","action","fyi"];
+  let html = "";
+  cats.forEach(cat => {
+    const items = QUESTS.filter(q => q.category === cat);
+    if(!items.length) return;
+    html += `<div class="section-title"><span class="dot ${cat}"></span>${CAT_LABEL[cat]}</div>`;
+    items.forEach(q => {
+      const isDone = !!state.done[q.id];
+      html += `
+        <div class="list-item ${isDone?"done":""}" data-id="${q.id}">
+          <div class="check">${isDone ? "✓" : ""}</div>
+          <div>
+            <div class="title">${q.title}</div>
+            <div class="sub">${q.from}${q.due !== "—" ? " · " + q.due : ""}</div>
+          </div>
+        </div>`;
+    });
+  });
+  el.innerHTML = html;
+  el.querySelectorAll(".list-item").forEach(item => {
+    item.addEventListener("click", () => {
+      const id = item.getAttribute("data-id");
+      if(state.done[id]){
+        delete state.done[id];
+        save();
+      } else {
+        completeQuest(id);
+        return;
+      }
+      renderAll();
+    });
+  });
+}
+
+/* ---------------- Effects ---------------- */
+function fireConfetti(){
+  const layer = document.getElementById("confetti-layer");
+  const colors = ["#f5c451","#31d6c1","#ff6ea8","#9d7bff","#57e39a"];
+  for(let i=0;i<36;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.left = Math.random()*100 + "vw";
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.6 + Math.random()*1.2) + "s";
+    p.style.transform = `rotate(${Math.random()*360}deg)`;
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function showLevelUp(level){
+  const el = document.getElementById("levelup");
+  el.textContent = `🎉 Level Up! You're now Level ${level}`;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+/* ---------------- View toggle ---------------- */
+document.getElementById("btnFocus").addEventListener("click", () => setView("focus"));
+document.getElementById("btnList").addEventListener("click", () => setView("list"));
+
+function setView(view){
+  document.getElementById("focusView").style.display = view === "focus" ? "block" : "none";
+  document.getElementById("listView").style.display = view === "list" ? "block" : "none";
+  document.getElementById("btnFocus").classList.toggle("active", view === "focus");
+  document.getElementById("btnList").classList.toggle("active", view === "list");
+}
+
+/* ---------------- Init ---------------- */
+function renderAll(){
+  renderStats();
+  renderFocus();
+  renderList();
+}
+renderAll();
+</script>
+
+</body>
+</html>
