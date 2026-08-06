@@ -172,6 +172,34 @@
     color:var(--gold);
   }
 
+  .note-label{
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--text-dim);
+    margin:14px 0 6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .note-updated{font-size:0.68rem;color:var(--text-dim);opacity:0.7;text-transform:none;letter-spacing:0;font-style:italic;}
+  .note-box{
+    width:100%;
+    min-height:56px;
+    resize:vertical;
+    background:rgba(0,0,0,0.22);
+    border:1px solid var(--card-border);
+    border-radius:8px;
+    padding:8px 10px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:0.85rem;
+    line-height:1.4;
+  }
+  .note-box:focus{outline:none;border-color:var(--teal);}
+  .note-box::placeholder{color:var(--text-dim);opacity:0.6;}
+  .note-box.list-note{min-height:34px;font-size:0.8rem;margin-top:6px;}
+
   .action-row{
     display:flex;
     gap:10px;
@@ -397,10 +425,10 @@ const QUESTS = [
   {
     id:"q-ryan-magee",
     category:"action",
-    title:"Ask Ryan Magee (Wolters Kluwer) about Brilliance ad options",
+    title:"Follow up with Ryan Magee (WK) + loop in LL on pocket card",
     from:"Ryan Birdsall (follow-up)",
     due:"—",
-    detail:"Follow up on what digital advertising options WK has that could work for Brilliance."
+    detail:"Done: asked Ryan Magee about WK's Brilliance ad options. Update 8/6: waiting to hear back from him. Next step once he responds — connect with LL about the pocket card creative and the UTM link for tracking."
   },
   {
     id:"q-smartbrief",
@@ -478,7 +506,7 @@ function loadState(){
   let raw = localStorage.getItem(STORE_KEY);
   let today = new Date().toISOString().slice(0,10);
   if(!raw){
-    return { xp:0, done:{}, snoozeOrder:[], streak:0, lastVisit:null, lastVisitDay:today };
+    return { xp:0, done:{}, snoozeOrder:[], streak:0, lastVisit:null, lastVisitDay:today, notes:{}, notesUpdated:{} };
   }
   let s = JSON.parse(raw);
   // streak logic: compare lastVisitDay to today
@@ -495,7 +523,15 @@ function loadState(){
   } else if(!s.streak){
     s.streak = 1;
   }
+  if(!s.notes) s.notes = {};
+  if(!s.notesUpdated) s.notesUpdated = {};
   return s;
+}
+
+function saveNote(id, text){
+  state.notes[id] = text;
+  state.notesUpdated[id] = new Date().toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+  save();
 }
 
 let state = loadState();
@@ -573,6 +609,8 @@ function renderFocus(){
     <div class="meta-line"><b>From:</b> ${q.from}</div>
     ${q.due !== "—" ? `<div class="due-pill">⏰ ${q.due}</div>` : ""}
     <div class="detail">${q.detail}</div>
+    <div class="note-label"><span>📝 Your notes</span><span class="note-updated">${state.notesUpdated[q.id] ? "updated " + state.notesUpdated[q.id] : ""}</span></div>
+    <textarea class="note-box" data-note-id="${q.id}" placeholder="Add a progress update or next step...">${state.notes[q.id] || ""}</textarea>
     <div class="action-row">
       <button class="btn-complete" data-id="${q.id}">✅ Complete Quest</button>
       <button class="btn-snooze" data-id="${q.id}">😴 Snooze</button>
@@ -582,6 +620,8 @@ function renderFocus(){
 
   card.querySelector(".btn-complete").addEventListener("click", () => completeQuest(q.id));
   card.querySelector(".btn-snooze").addEventListener("click", () => snoozeQuest(q.id));
+  const noteEl = card.querySelector(".note-box");
+  noteEl.addEventListener("input", () => saveNote(q.id, noteEl.value));
 
   hint.textContent = queue.length > 1 ? `${queue.length - 1} more quest${queue.length-1===1?"":"s"} waiting after this one` : "Last one — go get it!";
 }
@@ -620,20 +660,23 @@ function renderList(){
     html += `<div class="section-title"><span class="dot ${cat}"></span>${CAT_LABEL[cat]}</div>`;
     items.forEach(q => {
       const isDone = !!state.done[q.id];
+      const updated = state.notesUpdated[q.id] ? "updated " + state.notesUpdated[q.id] : "";
       html += `
         <div class="list-item ${isDone?"done":""}" data-id="${q.id}">
-          <div class="check">${isDone ? "✓" : ""}</div>
-          <div>
-            <div class="title">${q.title}</div>
-            <div class="sub">${q.from}${q.due !== "—" ? " · " + q.due : ""}</div>
+          <div class="check" data-toggle-id="${q.id}">${isDone ? "✓" : ""}</div>
+          <div style="flex:1">
+            <div class="title" data-toggle-id="${q.id}">${q.title}</div>
+            <div class="sub" data-toggle-id="${q.id}">${q.from}${q.due !== "—" ? " · " + q.due : ""}</div>
+            <div class="note-label"><span>📝 Notes</span><span class="note-updated">${updated}</span></div>
+            <textarea class="note-box list-note" data-note-id="${q.id}" placeholder="Add a progress update or next step...">${state.notes[q.id] || ""}</textarea>
           </div>
         </div>`;
     });
   });
   el.innerHTML = html;
-  el.querySelectorAll(".list-item").forEach(item => {
+  el.querySelectorAll("[data-toggle-id]").forEach(item => {
     item.addEventListener("click", () => {
-      const id = item.getAttribute("data-id");
+      const id = item.getAttribute("data-toggle-id");
       if(state.done[id]){
         delete state.done[id];
         save();
@@ -643,6 +686,10 @@ function renderList(){
       }
       renderAll();
     });
+  });
+  el.querySelectorAll(".note-box").forEach(noteEl => {
+    noteEl.addEventListener("click", e => e.stopPropagation());
+    noteEl.addEventListener("input", () => saveNote(noteEl.getAttribute("data-note-id"), noteEl.value));
   });
 }
 
