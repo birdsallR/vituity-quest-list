@@ -1,0 +1,481 @@
+<!doctype html>
+<title>MAM Keyword Wishlist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: header + add-form card, then category-grouped entry list, export drawer slides up from bottom */
+:root {
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --fg: #1C232B;
+  --fg-muted: #5B6672;
+  --accent: #2F6F62;
+  --accent-fg: #FFFFFF;
+  --border: #E1E5E9;
+  --danger: #B3503F;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161B;
+    --surface: #1A2026;
+    --fg: #EDEFF2;
+    --fg-muted: #96A1AC;
+    --accent: #4FA98F;
+    --accent-fg: #0C1310;
+    --border: #2A3138;
+    --danger: #E08A78;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161B;
+  --surface: #1A2026;
+  --fg: #EDEFF2;
+  --fg-muted: #96A1AC;
+  --accent: #4FA98F;
+  --accent-fg: #0C1310;
+  --border: #2A3138;
+  --danger: #E08A78;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 96px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+h1, h2 { font-family: "Archivo", system-ui, sans-serif; text-wrap: balance; }
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  color: var(--fg-muted);
+  font-size: 0.92rem;
+  margin: 0 0 20px;
+  max-width: 60ch;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.form-card { margin-bottom: 24px; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+input[type="text"], select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.92rem;
+  font-family: inherit;
+}
+input[type="text"]:focus, select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: var(--accent-fg); }
+.btn-primary:focus-visible, .btn-ghost:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+.form-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 28px 0 10px;
+}
+.section-head h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; color: var(--fg-muted); }
+.count-pill {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.entry-list { display: flex; flex-direction: column; gap: 8px; }
+.entry {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cat-color, var(--accent));
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.entry-main { min-width: 0; }
+.entry-tag {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: block;
+}
+.entry-use {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+  overflow-wrap: break-word;
+}
+.entry-meta {
+  font-size: 0.74rem;
+  color: var(--fg-muted);
+  margin-top: 4px;
+}
+.example-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 6px;
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.icon-btn:hover { color: var(--danger); }
+
+.empty-state {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.export-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.export-bar .total { font-size: 0.85rem; color: var(--fg-muted); }
+
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 20;
+}
+.modal {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 780px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px max(18px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.modal-head h2 { font-size: 1rem; margin: 0; }
+textarea {
+  flex: 1;
+  min-height: 220px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  resize: vertical;
+  white-space: pre;
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+.copied-msg { font-size: 0.8rem; color: var(--accent); align-self: center; margin-right: auto; }
+
+@media (max-width: 520px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<h1>MAM Keyword Wishlist</h1>
+<p class="subtitle">Tag and search ideas for the new Media Asset Manager — collect them live on the call, then export a clean list to hand off to Angie.</p>
+
+<div class="card form-card">
+  <div class="form-grid">
+    <div class="full">
+      <label for="f-tag">Keyword / tag</label>
+      <input type="text" id="f-tag" placeholder="e.g. Hospitalist, Theo + Stage, Therapy Boots">
+    </div>
+    <div class="full">
+      <label for="f-use">What it's for</label>
+      <input type="text" id="f-use" placeholder="e.g. pull photos of leaders speaking for the newsletter">
+    </div>
+    <div>
+      <label for="f-cat">Category</label>
+      <select id="f-cat">
+        <option value="Role & Specialty">Role & Specialty</option>
+        <option value="Leadership & Events">Leadership & Events</option>
+        <option value="MOOV / Service Line">MOOV / Service Line</option>
+        <option value="Content Type">Content Type</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label for="f-who">Requested by</label>
+      <input type="text" id="f-who" placeholder="name (optional)">
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" id="add-btn">Add idea</button>
+  </div>
+</div>
+
+<div id="list-root"></div>
+
+<div class="export-bar">
+  <span class="total" id="total-count">0 ideas</span>
+  <button class="btn btn-ghost" id="clear-examples-btn">Clear examples</button>
+  <button class="btn btn-primary" id="export-btn">Export for Angie</button>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Export</h2>
+      <button class="icon-btn" id="modal-close" aria-label="Close">&#10005;</button>
+    </div>
+    <textarea id="export-text" readonly></textarea>
+    <div class="modal-actions">
+      <span class="copied-msg" id="copied-msg" hidden>Copied</span>
+      <button class="btn btn-ghost" id="modal-close-2">Close</button>
+      <button class="btn btn-primary" id="copy-btn">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var CATEGORIES = ["Role & Specialty", "Leadership & Events", "MOOV / Service Line", "Content Type", "Other"];
+  var CAT_COLORS = {
+    "Role & Specialty": "#C97A2E",
+    "Leadership & Events": "#3B6FB6",
+    "MOOV / Service Line": "#2F6F62",
+    "Content Type": "#8A5CB0",
+    "Other": "#5B6672"
+  };
+  var STORAGE_KEY = "mam-wishlist-entries-v1";
+
+  var seedEntries = [
+    { id: "seed-1", tag: "Hospitalist / RN", use: "Pull photos & interviews by physician/role type for recognition content (Hospitalist Day, Nurses Month)", category: "Role & Specialty", who: "Nicole", example: true },
+    { id: "seed-2", tag: "Theo + Stage", use: "Find photos of leadership speaking on stage, for the newsletter", category: "Leadership & Events", who: "Kristen", example: true },
+    { id: "seed-3", tag: "Injections vs Therapy Boots", use: "Tell MOOV treatment types apart in photo/video search", category: "MOOV / Service Line", who: "Peyton", example: true }
+  ];
+
+  function loadEntries() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return seedEntries.slice();
+  }
+  function saveEntries() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (e) {}
+  }
+
+  var entries = loadEntries();
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function render() {
+    var root = document.getElementById("list-root");
+    root.innerHTML = "";
+    var total = entries.length;
+    document.getElementById("total-count").textContent = total + (total === 1 ? " idea" : " ideas");
+
+    CATEGORIES.forEach(function (cat) {
+      var items = entries.filter(function (e) { return e.category === cat; });
+      var head = document.createElement("div");
+      head.className = "section-head";
+      head.innerHTML = '<h2>' + escapeHtml(cat) + '</h2><span class="count-pill">' + items.length + '</span>';
+      root.appendChild(head);
+
+      if (items.length === 0) {
+        var empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "No ideas yet for this category.";
+        root.appendChild(empty);
+        return;
+      }
+
+      var list = document.createElement("div");
+      list.className = "entry-list";
+      items.forEach(function (e) {
+        var row = document.createElement("div");
+        row.className = "entry";
+        row.style.setProperty("--cat-color", CAT_COLORS[e.category] || "");
+        var whoHtml = e.who ? ' <span class="entry-meta">&mdash; ' + escapeHtml(e.who) + '</span>' : "";
+        row.innerHTML =
+          '<div class="entry-main">' +
+            '<span class="entry-tag">' + escapeHtml(e.tag) + (e.example ? '<span class="example-tag">Example</span>' : '') + '</span>' +
+            (e.use ? '<div class="entry-use">' + escapeHtml(e.use) + '</div>' : '') +
+            (e.who ? '<div class="entry-meta">Requested by ' + escapeHtml(e.who) + '</div>' : '') +
+          '</div>' +
+          '<button class="icon-btn" aria-label="Remove" data-id="' + e.id + '">&#10005;</button>';
+        list.appendChild(row);
+      });
+      root.appendChild(list);
+    });
+  }
+
+  document.getElementById("list-root").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-id]");
+    if (!btn) return;
+    var id = btn.getAttribute("data-id");
+    entries = entries.filter(function (e) { return e.id !== id; });
+    saveEntries();
+    render();
+  });
+
+  document.getElementById("add-btn").addEventListener("click", function () {
+    var tagEl = document.getElementById("f-tag");
+    var useEl = document.getElementById("f-use");
+    var catEl = document.getElementById("f-cat");
+    var whoEl = document.getElementById("f-who");
+    var tag = tagEl.value.trim();
+    if (!tag) { tagEl.focus(); return; }
+    entries.push({
+      id: "e-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      tag: tag,
+      use: useEl.value.trim(),
+      category: catEl.value,
+      who: whoEl.value.trim(),
+      example: false
+    });
+    saveEntries();
+    render();
+    tagEl.value = ""; useEl.value = ""; whoEl.value = "";
+    tagEl.focus();
+  });
+
+  [document.getElementById("f-tag"), document.getElementById("f-use"), document.getElementById("f-who")].forEach(function (el) {
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") document.getElementById("add-btn").click();
+    });
+  });
+
+  document.getElementById("clear-examples-btn").addEventListener("click", function () {
+    entries = entries.filter(function (e) { return !e.example; });
+    saveEntries();
+    render();
+  });
+
+  function buildExportText() {
+    var lines = [];
+    lines.push("MAM Keyword Wishlist — compiled " + new Date().toLocaleDateString());
+    lines.push("For: Angie / MAM team");
+    lines.push("");
+    CATEGORIES.forEach(function (cat) {
+      var items = entries.filter(function (e) { return e.category === cat && !e.example; });
+      if (items.length === 0) return;
+      lines.push(cat.toUpperCase());
+      items.forEach(function (e) {
+        var line = "- " + e.tag;
+        if (e.use) line += " — " + e.use;
+        if (e.who) line += " (requested by " + e.who + ")";
+        lines.push(line);
+      });
+      lines.push("");
+    });
+    lines.push("Note: not all of these may be technically doable — take what's helpful.");
+    return lines.join("\n");
+  }
+
+  document.getElementById("export-btn").addEventListener("click", function () {
+    document.getElementById("export-text").value = buildExportText();
+    document.getElementById("copied-msg").hidden = true;
+    document.getElementById("modal-backdrop").hidden = false;
+  });
+  function closeModal() { document.getElementById("modal-backdrop").hidden = true; }
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("modal-close-2").addEventListener("click", closeModal);
+  document.getElementById("modal-backdrop").addEventListener("click", function (ev) {
+    if (ev.target === ev.currentTarget) closeModal();
+  });
+  document.getElementById("copy-btn").addEventListener("click", function () {
+    var text = document.getElementById("export-text").value;
+    var msg = document.getElementById("copied-msg");
+    function showCopied() { msg.hidden = false; setTimeout(function () { msg.hidden = true; }, 2000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(showCopied).catch(function () {
+        document.getElementById("export-text").select();
+      });
+    } else {
+      document.getElementById("export-text").select();
+    }
+  });
+
+  render();
+})();
+</script>
