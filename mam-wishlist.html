@@ -2,7 +2,7 @@
 <title>MAM Keyword Wishlist</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: header + add-form card, then category-grouped entry list, export drawer slides up from bottom */
+/* Layout: header + add-form card (Field / Values / Why / Who), then a flat newest-first field list, export drawer slides up from bottom */
 :root {
   --bg: #F7F8FA;
   --surface: #FFFFFF;
@@ -12,6 +12,8 @@
   --accent-fg: #FFFFFF;
   --border: #E1E5E9;
   --danger: #B3503F;
+  --chip-bg: #EAF2EF;
+  --chip-fg: #1F5146;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -24,6 +26,8 @@
     --accent-fg: #0C1310;
     --border: #2A3138;
     --danger: #E08A78;
+    --chip-bg: #1C2E2A;
+    --chip-fg: #8FD6C2;
     color-scheme: dark;
   }
 }
@@ -36,6 +40,8 @@
   --accent-fg: #0C1310;
   --border: #2A3138;
   --danger: #E08A78;
+  --chip-bg: #1C2E2A;
+  --chip-fg: #8FD6C2;
   color-scheme: dark;
 }
 
@@ -62,7 +68,7 @@ h1 {
   color: var(--fg-muted);
   font-size: 0.92rem;
   margin: 0 0 20px;
-  max-width: 60ch;
+  max-width: 62ch;
 }
 .card {
   background: var(--surface);
@@ -86,7 +92,15 @@ label {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-input[type="text"], select {
+.hint {
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--fg-muted);
+  display: inline;
+}
+input[type="text"] {
   width: 100%;
   min-width: 0;
   padding: 9px 10px;
@@ -97,7 +111,7 @@ input[type="text"], select {
   font-size: 0.92rem;
   font-family: inherit;
 }
-input[type="text"]:focus, select:focus {
+input[type="text"]:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -137,35 +151,51 @@ input[type="text"]:focus, select:focus {
   font-variant-numeric: tabular-nums;
 }
 
-.entry-list { display: flex; flex-direction: column; gap: 8px; }
+.entry-list { display: flex; flex-direction: column; gap: 10px; }
 .entry {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--cat-color, var(--accent));
+  border-left: 3px solid var(--accent);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
 }
-.entry-main { min-width: 0; }
-.entry-tag {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.86rem;
-  font-weight: 600;
+.entry-main { min-width: 0; flex: 1; }
+.entry-field {
+  font-family: "Archivo", system-ui, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
   display: block;
 }
-.entry-use {
+.value-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.value-chip {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.entry-why {
   color: var(--fg-muted);
   font-size: 0.85rem;
-  margin-top: 2px;
+  margin-top: 8px;
   overflow-wrap: break-word;
 }
+.entry-why li { margin: 2px 0; }
 .entry-meta {
   font-size: 0.74rem;
   color: var(--fg-muted);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 .example-tag {
   display: inline-block;
@@ -297,29 +327,23 @@ textarea {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 
 <h1>MAM Keyword Wishlist</h1>
-<p class="subtitle">Tag and search ideas for the new Media Asset Manager — collect them live on the call, then export a clean list to hand off to Angie.</p>
+<p class="subtitle">Iconik (our MAM) is built on custom metadata fields with value lists, plus AI auto-tagging of faces/objects/speech. So instead of loose keywords, we're collecting <strong>fields Angie could build</strong>, the <strong>values</strong> within each, and <strong>why</strong> &mdash; focused on what AI can't already infer.</p>
 
 <div class="card form-card">
   <div class="form-grid">
     <div class="full">
-      <label for="f-tag">Keyword / tag</label>
-      <input type="text" id="f-tag" placeholder="e.g. Hospitalist, Theo + Stage, Therapy Boots">
+      <label for="f-field">Field <span class="hint">&mdash; the attribute you'd want to search/filter by</span></label>
+      <input type="text" id="f-field" placeholder="e.g. Physician/Role Type, Setting/Context, MOOV Treatment Type">
     </div>
     <div class="full">
-      <label for="f-use">What it's for</label>
-      <input type="text" id="f-use" placeholder="e.g. pull photos of leaders speaking for the newsletter">
+      <label for="f-values">Values <span class="hint">&mdash; comma-separated options within that field</span></label>
+      <input type="text" id="f-values" placeholder="e.g. Hospitalist, RN, APC">
     </div>
-    <div>
-      <label for="f-cat">Category</label>
-      <select id="f-cat">
-        <option value="Role & Specialty">Role & Specialty</option>
-        <option value="Leadership & Events">Leadership & Events</option>
-        <option value="MOOV / Service Line">MOOV / Service Line</option>
-        <option value="Content Type">Content Type</option>
-        <option value="Other">Other</option>
-      </select>
+    <div class="full">
+      <label for="f-why">Why <span class="hint">&mdash; what are you trying to find, and why can't AI auto-tag it?</span></label>
+      <input type="text" id="f-why" placeholder="e.g. need to pull people by role for Hospitalist Day / Nurses Month content">
     </div>
-    <div>
+    <div class="full">
       <label for="f-who">Requested by</label>
       <input type="text" id="f-who" placeholder="name (optional)">
     </div>
@@ -329,10 +353,14 @@ textarea {
   </div>
 </div>
 
+<div class="section-head">
+  <h2>Field Wishlist</h2>
+  <span class="count-pill" id="field-count">0 fields</span>
+</div>
 <div id="list-root"></div>
 
 <div class="export-bar">
-  <span class="total" id="total-count">0 ideas</span>
+  <span class="total" id="total-count">0 fields</span>
   <button class="btn btn-ghost" id="clear-examples-btn">Clear examples</button>
   <button class="btn btn-primary" id="export-btn">Export for Angie</button>
 </div>
@@ -354,20 +382,12 @@ textarea {
 
 <script>
 (function () {
-  var CATEGORIES = ["Role & Specialty", "Leadership & Events", "MOOV / Service Line", "Content Type", "Other"];
-  var CAT_COLORS = {
-    "Role & Specialty": "#C97A2E",
-    "Leadership & Events": "#3B6FB6",
-    "MOOV / Service Line": "#2F6F62",
-    "Content Type": "#8A5CB0",
-    "Other": "#5B6672"
-  };
-  var STORAGE_KEY = "mam-wishlist-entries-v1";
+  var STORAGE_KEY = "mam-wishlist-fields-v2";
 
   var seedEntries = [
-    { id: "seed-1", tag: "Hospitalist / RN", use: "Pull photos & interviews by physician/role type for recognition content (Hospitalist Day, Nurses Month)", category: "Role & Specialty", who: "Nicole", example: true },
-    { id: "seed-2", tag: "Theo + Stage", use: "Find photos of leadership speaking on stage, for the newsletter", category: "Leadership & Events", who: "Kristen", example: true },
-    { id: "seed-3", tag: "Injections vs Therapy Boots", use: "Tell MOOV treatment types apart in photo/video search", category: "MOOV / Service Line", who: "Peyton", example: true }
+    { id: "seed-1", field: "Physician/Role Type", values: ["Hospitalist", "RN"], why: ["Pull photos & interviews by role for recognition content like Hospitalist Day or Nurses Month"], who: ["Nicole"], example: true },
+    { id: "seed-2", field: "Setting/Context", values: ["Stage", "Keynote"], why: ["Find leadership photos for the newsletter — AI auto-tags the person's face, but not the occasion"], who: ["Kristen"], example: true },
+    { id: "seed-3", field: "MOOV Treatment Type", values: ["Injection", "Therapy Boots"], why: ["Tell MOOV treatment types apart in photo/video search"], who: ["Peyton"], example: true }
   ];
 
   function loadEntries() {
@@ -423,45 +443,56 @@ textarea {
     });
   }
 
+  function dedupPush(arr, val) {
+    if (!val) return;
+    var lower = val.trim().toLowerCase();
+    if (!lower) return;
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].trim().toLowerCase() === lower) return;
+    }
+    arr.push(val.trim());
+  }
+
   function render() {
     var root = document.getElementById("list-root");
     root.innerHTML = "";
+    var real = entries.filter(function (e) { return !e.example; });
     var total = entries.length;
-    document.getElementById("total-count").textContent = total + (total === 1 ? " idea" : " ideas");
+    document.getElementById("total-count").textContent = total + (total === 1 ? " field" : " fields");
+    document.getElementById("field-count").textContent = total;
 
-    CATEGORIES.forEach(function (cat) {
-      var items = entries.filter(function (e) { return e.category === cat; });
-      var head = document.createElement("div");
-      head.className = "section-head";
-      head.innerHTML = '<h2>' + escapeHtml(cat) + '</h2><span class="count-pill" data-cat="' + escapeHtml(cat) + '">' + items.length + '</span>';
-      root.appendChild(head);
+    if (entries.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No fields yet — add the first one above.";
+      root.appendChild(empty);
+      return;
+    }
 
-      if (items.length === 0) {
-        var empty = document.createElement("div");
-        empty.className = "empty-state";
-        empty.textContent = "No ideas yet for this category.";
-        root.appendChild(empty);
-        return;
-      }
-
-      var list = document.createElement("div");
-      list.className = "entry-list";
-      items.forEach(function (e) {
-        var row = document.createElement("div");
-        row.className = "entry" + (e.id === lastAddedId ? " is-new" : "");
-        row.style.setProperty("--cat-color", CAT_COLORS[e.category] || "");
-        var whoHtml = e.who ? ' <span class="entry-meta">&mdash; ' + escapeHtml(e.who) + '</span>' : "";
-        row.innerHTML =
-          '<div class="entry-main">' +
-            '<span class="entry-tag">' + escapeHtml(e.tag) + (e.example ? '<span class="example-tag">Example</span>' : '') + '</span>' +
-            (e.use ? '<div class="entry-use">' + escapeHtml(e.use) + '</div>' : '') +
-            (e.who ? '<div class="entry-meta">Requested by ' + escapeHtml(e.who) + '</div>' : '') +
-          '</div>' +
-          '<button class="icon-btn" aria-label="Remove" data-id="' + e.id + '">&#10005;</button>';
-        list.appendChild(row);
-      });
-      root.appendChild(list);
+    var list = document.createElement("div");
+    list.className = "entry-list";
+    var ordered = entries.slice().reverse();
+    ordered.forEach(function (e) {
+      var row = document.createElement("div");
+      row.className = "entry" + (e.id === lastAddedId ? " is-new" : "");
+      var chipsHtml = (e.values || []).map(function (v) {
+        return '<span class="value-chip">' + escapeHtml(v) + '</span>';
+      }).join("");
+      var whyHtml = (e.why && e.why.length)
+        ? '<ul class="entry-why">' + e.why.map(function (w) { return '<li>' + escapeHtml(w) + '</li>'; }).join("") + '</ul>'
+        : "";
+      var whoText = (e.who && e.who.length) ? e.who.join(", ") : "";
+      row.innerHTML =
+        '<div class="entry-main">' +
+          '<span class="entry-field">' + escapeHtml(e.field) + (e.example ? '<span class="example-tag">Example</span>' : '') + '</span>' +
+          (chipsHtml ? '<div class="value-chips">' + chipsHtml + '</div>' : '') +
+          whyHtml +
+          (whoText ? '<div class="entry-meta">Suggested by ' + escapeHtml(whoText) + '</div>' : '') +
+        '</div>' +
+        '<button class="icon-btn" aria-label="Remove" data-id="' + e.id + '">&#10005;</button>';
+      list.appendChild(row);
     });
+    root.appendChild(list);
   }
 
   document.getElementById("list-root").addEventListener("click", function (ev) {
@@ -474,34 +505,56 @@ textarea {
   });
 
   document.getElementById("add-btn").addEventListener("click", function () {
-    var tagEl = document.getElementById("f-tag");
-    var useEl = document.getElementById("f-use");
-    var catEl = document.getElementById("f-cat");
+    var fieldEl = document.getElementById("f-field");
+    var valuesEl = document.getElementById("f-values");
+    var whyEl = document.getElementById("f-why");
     var whoEl = document.getElementById("f-who");
-    var tag = tagEl.value.trim();
-    if (!tag) { tagEl.focus(); return; }
-    var newId = "e-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
-    var cat = catEl.value;
-    entries.push({
-      id: newId,
-      tag: tag,
-      use: useEl.value.trim(),
-      category: cat,
-      who: whoEl.value.trim(),
-      example: false
-    });
+
+    var fieldName = fieldEl.value.trim();
+    if (!fieldName) { fieldEl.focus(); return; }
+
+    var newValues = valuesEl.value.split(",").map(function (v) { return v.trim(); }).filter(Boolean);
+    var newWhy = whyEl.value.trim();
+    var newWho = whoEl.value.trim();
+
+    var existing = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (!entries[i].example && entries[i].field.trim().toLowerCase() === fieldName.toLowerCase()) {
+        existing = entries[i];
+        break;
+      }
+    }
+
+    var targetId;
+    if (existing) {
+      newValues.forEach(function (v) { dedupPush(existing.values, v); });
+      if (newWhy) dedupPush(existing.why, newWhy);
+      if (newWho) dedupPush(existing.who, newWho);
+      targetId = existing.id;
+    } else {
+      targetId = "e-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+      entries.push({
+        id: targetId,
+        field: fieldName,
+        values: newValues,
+        why: newWhy ? [newWhy] : [],
+        who: newWho ? [newWho] : [],
+        example: false
+      });
+    }
+
     saveEntries();
-    lastAddedId = newId;
+    lastAddedId = targetId;
     render();
     lastAddedId = null;
     burstConfetti();
-    bumpEl(document.querySelector('.count-pill[data-cat="' + cat.replace(/"/g, '\\"') + '"]'));
+    bumpEl(document.getElementById("field-count"));
     bumpEl(document.getElementById("total-count"));
-    tagEl.value = ""; useEl.value = ""; whoEl.value = "";
-    tagEl.focus();
+    fieldEl.value = ""; valuesEl.value = ""; whyEl.value = ""; whoEl.value = "";
+    fieldEl.focus();
   });
 
-  [document.getElementById("f-tag"), document.getElementById("f-use"), document.getElementById("f-who")].forEach(function (el) {
+  [document.getElementById("f-field"), document.getElementById("f-values"), document.getElementById("f-why"), document.getElementById("f-who")].forEach(function (el) {
     el.addEventListener("keydown", function (ev) {
       if (ev.key === "Enter") document.getElementById("add-btn").click();
     });
@@ -515,22 +568,19 @@ textarea {
 
   function buildExportText() {
     var lines = [];
-    lines.push("MAM Keyword Wishlist — compiled " + new Date().toLocaleDateString());
-    lines.push("For: Angie / MAM team");
+    lines.push("MAM (Iconik) Metadata Field Wishlist — compiled " + new Date().toLocaleDateString());
+    lines.push("For: Angie / MAM setup team");
+    lines.push("Format: Field → candidate values → why we'd search this way. Not all of these may be technically doable — take what's helpful.");
     lines.push("");
-    CATEGORIES.forEach(function (cat) {
-      var items = entries.filter(function (e) { return e.category === cat && !e.example; });
-      if (items.length === 0) return;
-      lines.push(cat.toUpperCase());
-      items.forEach(function (e) {
-        var line = "- " + e.tag;
-        if (e.use) line += " — " + e.use;
-        if (e.who) line += " (requested by " + e.who + ")";
-        lines.push(line);
-      });
+    var real = entries.filter(function (e) { return !e.example; }).slice().reverse();
+    if (real.length === 0) lines.push("(no fields added yet)");
+    real.forEach(function (e) {
+      lines.push("FIELD: " + e.field);
+      if (e.values && e.values.length) lines.push("  Values: " + e.values.join(", "));
+      if (e.why && e.why.length) lines.push("  Why: " + e.why.join("; "));
+      if (e.who && e.who.length) lines.push("  Suggested by: " + e.who.join(", "));
       lines.push("");
     });
-    lines.push("Note: not all of these may be technically doable — take what's helpful.");
     return lines.join("\n");
   }
 
